@@ -5,6 +5,34 @@
     <script src="underscore.js"></script>
     <script src="backbone.js"></script>
     <script src="blackjack.js"></script>
+    <link rel="stylesheet" href="bootstrap.min.css">
   </head>
-  <body></body>
+  <body>
+    <script src="init.js"></script>
+    <div id="container">
+      <div id="game">
+        <button class="startGame">Start New Game</button>
+      </div>
+
+      <div id="dealer" class="player">
+        <p>Dealer</p>
+        <ul class="hand">
+          <li class="card downCard">Click "Start New Game" to deal</li>
+          <li class="card">Click "Start New Game" to deal</li>
+        </ul>
+      </div>
+
+      <div id="player1" class="player">
+        <p>Player 1</p>
+        <button class="hit">Hit Me!</button>
+        <button class="stay">Stay</button>
+        <ul class="hand">
+          <li class="card">Click "Start New Game" to deal</li>
+          <li class="card">Click "Start New Game" to deal</li>
+        </ul>
+      </div>
+
+
+    </div>
+  </body>
 <html>
