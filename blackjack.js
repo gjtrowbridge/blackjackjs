@@ -1,106 +1,133 @@
 //Card class
-var Card = function(suit, val) {
-  this.suit = suit;
-  this.val = val;
-  this.numVal = Math.min(val, 10);
+var Card = Backbone.Model.extend({
+  initialize: function(suit, val) {
+    this.set({'suit': suit});
+    this.set({'val': val});
+    this.set({'numVal': Math.min(val, 10)});
 
-  if (val === 1) {
-    this.stringVal = 'Ace';
-  } else if (val === 11) {
-    this.stringVal = 'Jack';
-  } else if (val === 12) {
-    this.stringVal = 'Queen';
-  } else if (val === 13) {
-    this.stringVal = 'King';
-  } else {
-    this.stringVal = val.toString();
-  }
-
-
-};
-
-//Converts the card to a human-readable string
-Card.prototype.toString = function() {
-  return this.stringVal + ' of ' + this.suit;
-};
-
-//Deck Class
-var Deck = function() {
-  this.initialize();
-};
-
-//Logs all cards in the deck
-Deck.prototype.inspect = function() {
-  for (var i = 0; i < this.cards.length; i++) {
-    console.log(this.cards.toString());
-  }
-};
-
-//Creates a new deck in order
-Deck.prototype.initialize = function() {
-  this.cards = [];
-  var suit = "Hearts";
-  for (var i=0; i<52; i++) {
-    var val = (i % 13) + 1;
-    if (i === 13) {
-      suit = "Diamonds";
-    } else if (i === 26) {
-      suit = "Spades";
-    } else if (i === 39) {
-      suit = "Clubs";
+    if (val === 1) {
+      this.set({'stringVal':'Ace'});
+    } else if (val === 11) {
+      this.set({'stringVal':'Jack'});
+    } else if (val === 12) {
+      this.set({'stringVal':'Queen'});
+    } else if (val === 13) {
+      this.set({'stringVal':'King'});
+    } else {
+      this.set({'stringVal':val.toString()});
     }
-    this.cards.push(new Card(suit, val));
+  },
+  toString: function() {
+    return this.get('stringVal') + ' of ' + this.get('suit');
   }
-};
+});
 
-//Chooses a random index from among the remaining cards
-Deck.prototype._getRandomIndex = function() {
-  return Math.floor(Math.random() * this.cards.length);
-};
+var Deck = Backbone.Model.extend({
+  //Creates and stores a new deck
+  initialize: function() {
+    this.set({'cards':[]});
+    var suit = "Hearts";
+    for (var i=0; i<52; i++) {
+      var val = (i % 13) + 1;
+      if (i === 13) {
+        suit = "Diamonds";
+      } else if (i === 26) {
+        suit = "Spades";
+      } else if (i === 39) {
+        suit = "Clubs";
+      }
+      this.get('cards').push(new Card(suit, val));
+    }
+  },
+  //Logs all cards in the deck
+  inspect: function() {
+    for (var i=0; i < this.get('cards').length; i++) {
+      console.log(this.get('cards').toString());
+    }
+  },
+  //Chooses a random index from among the remaining cards
+  //Should be named to indicate that it's private, but Backbone 
+  //doesn't allow this naming (apparently) and I didn't feel like
+  //writing out a closure to make it truly private
+  getRandomIndex: function() {
+    return Math.floor(Math.random() * this.get('cards').length);
+  },
+  //Gets a random card from the deck
+  //This allows you to "play" without needing to shuffle
+  popRandomCard: function() {
+    //Gets a random index
+    var index = this.getRandomIndex();
 
-//Shuffles the deck (can also shuffle when some cards have been dealt already)
-Deck.prototype.shuffle = function(num) {
-  if (num === undefined) {
-    num = 10000;
+    //Returns the card at that index AND removes it from the array
+    return this.get('cards').splice(index,1)[0];
+  },
+
+  //The two functions below are still available, but neither are
+  //necessary if you're using popRandomCard()
+
+  //Shuffles the deck (can also shuffle when some cards have been dealt already)
+  shuffle: function(num) {
+    if (num === undefined) {
+      num = 10000;
+    }
+    for (var i=0; i<num; i++) {
+      var ind1 = this.getRandomIndex();
+      var ind2 = this.getRandomIndex();
+
+      var temp = this.get('cards')[ind1];
+      this.get('cards')[ind1] = this.get('cards')[ind2];
+      this.get('cards')[ind2] = temp;
+    }
+  },
+  //Removes and returns the card at the front of the deck
+  popFirstCard: function() {
+    return this.get('cards').shift();
   }
-  for (var i=0; i<num; i++) {
-    var ind1 = this._getRandomIndex();
-    var ind2 = this._getRandomIndex();
+});
 
-    var temp = this.cards[ind1];
-    this.cards[ind1] = this.cards[ind2];
-    this.cards[ind2] = temp;
+var Hand = Backbone.Model.extend({
+  initialize: function() {
+    this.set({'cards':[]});
+    this.set({'bust':false});
+    this.set({'total':0});
+  },
+  //Pushes a card to the hand
+  pushCard: function(card) {
+    this.get('cards').push(card);
+    this.updateInternalProperties();
+  },
+  //Updates "bust", "total"
+  updateInternalProperties: function() {
+    var aces = 0;
+    var newTotal = 0;
+
+    //Counts up combined value of all cards
+    //In this inital count, aces = 1
+    for (var i=0; i<this.get('cards').length; i++) {
+      var card = this.get('cards')[i];
+      newTotal += card.get('numVal');
+
+      //Counts # of aces
+      if (card.numVal === 1) {
+        aces++;
+      }
+    }
+
+    //Changes ace values to 11 where appropriate
+    while ((newTotal + 10 <= 21) && (aces > 0)) {
+      aces--;
+      newTotal += 10;
+    }
+
+    if (newTotal > 21) {
+      this.set({bust:true});
+    } else {
+      this.set({bust:false});
+    }
+    this.set({total:newTotal});
   }
-};
+});
 
-//Removes and returns the card at the front of the deck
-Deck.prototype.popFirstCard = function() {
-  return this.cards.shift();
-};
-
-//Gets a random card from the deck
-//This allows you to "play" without needing to shuffle
-Deck.prototype.popRandomCard = function() {
-  //Gets a random index
-  var index = this._getRandomIndex();
-
-  //Gets the card at that index
-  var card = this.cards[index];
-
-  //Removes the card from the "cards" array
-  this.cards[index] = this.cards[0];
-  this.cards.shift();
-
-  //Returns chosen card
-  return card;
-};
-
-//Hand class
-var Hand = function() {
-  this.cards = [];
-  this.bust = false;
-  this.total = 0;
-};
 
 //Player class
 var Player = function(firstName) {
@@ -109,41 +136,11 @@ var Player = function(firstName) {
   this.dealer = false;
 };
 
-
-//Pushes a card to the hand
-Hand.prototype.pushCard = function(card) {
-  this.cards.push(card);
-  this._updateInternalProperties();
-};
-
 //Saves the total value of the current hand
 //also saves a "bust" boolean
 Hand.prototype._updateInternalProperties = function() {
   this.total = 0;
-  var aces = 0;
-
-  //Counts up combined value of all cards
-  for (var i=0; i<this.cards.length; i++) {
-    var card = this.cards[i];
-    this.total += card.numVal;
-
-    //Counts # of aces
-    if (card.numVal === 1) {
-      aces++;
-    }
-  }
-
-  //Changes ace values to 11 when appropriate
-  while ((this.total + 10 <= 21)&&(aces > 0)) {
-    aces--;
-    this.total+=10;
-  }
-
-  if (this.total > 21) {
-    this.bust = true;
-  } else {
-    this.bust = false;
-  }
+  
 };
 
 //Game class--accepts arbitrary number of player objects

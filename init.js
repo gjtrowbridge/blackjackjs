@@ -30,9 +30,9 @@ $(document).ready(function() {
       console.log($cardsList);
 
       //Deals cards to the appropriate location
-      for (var j=0; j<player.hand.cards.length; j++) {
+      for (var j=0; j<player.hand.get('cards').length; j++) {
         //The card to deal
-        var card = player.hand.cards[j];
+        var card = player.hand.get('cards')[j];
 
         //Creates a list element to insert the card
         var $cardHtml = $('<li>');
