@@ -3,10 +3,14 @@ $(document).ready(function() {
   //Runs immediately
   window.game = new Game();
 
-  var card = new Card('Hearts', 4);
-  var cardView = new CardView({model: card});
-  cardView.render();
-  console.log(cardView.el);
+  window.card = new Card('Hearts', 4);
+  window.cardView = new CardView({model: card});
+  window.hand = new Hand();
+  window.handView = new HandView({model: hand});
+  window.game = new Game();
+  window.gameView = new GameView({model: game});
+
+  $('#container').append(window.gameView.$el);
 
 });
   // //updates the cards html
