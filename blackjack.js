@@ -1,21 +1,24 @@
 //Card class
 var Card = Backbone.Model.extend({
   initialize: function(suit, val) {
-    this.set({'suit': suit});
-    this.set({'val': val});
-    this.set({'numVal': Math.min(val, 10)});
-
+    var stringVal = val.toString();
     if (val === 1) {
-      this.set({'stringVal':'Ace'});
+      stringVal = 'Ace';
     } else if (val === 11) {
-      this.set({'stringVal':'Jack'});
+      stringVal = 'Jack';
     } else if (val === 12) {
-      this.set({'stringVal':'Queen'});
+      stringVal = 'Queen';
     } else if (val === 13) {
-      this.set({'stringVal':'King'});
-    } else {
-      this.set({'stringVal':val.toString()});
+      stringVal = 'King';
     }
+
+    this.set({
+      suit: suit,
+      val: val,
+      numVal: Math.min(val,10),
+      stringVal: stringVal
+    });
+
   },
   toString: function() {
     return this.get('stringVal') + ' of ' + this.get('suit');
@@ -25,7 +28,7 @@ var Card = Backbone.Model.extend({
 var Deck = Backbone.Model.extend({
   //Creates and stores a new deck
   initialize: function() {
-    this.set({'cards':[]});
+    var cards = [];
     var suit = "Hearts";
     for (var i=0; i<52; i++) {
       var val = (i % 13) + 1;
@@ -36,8 +39,11 @@ var Deck = Backbone.Model.extend({
       } else if (i === 39) {
         suit = "Clubs";
       }
-      this.get('cards').push(new Card(suit, val));
+      cards.push(new Card(suit, val));
     }
+    this.set({
+      cards: cards
+    });
   },
   //Logs all cards in the deck
   inspect: function() {
@@ -87,9 +93,11 @@ var Deck = Backbone.Model.extend({
 
 var Hand = Backbone.Model.extend({
   initialize: function() {
-    this.set({'cards':[]});
-    this.set({'bust':false});
-    this.set({'total':0});
+    this.set({
+      cards: [],
+      bust: false,
+      total: 0
+    });
   },
   //Pushes a card to the hand
   pushCard: function(card) {
@@ -128,105 +136,116 @@ var Hand = Backbone.Model.extend({
   }
 });
 
-
-//Player class
-var Player = function(firstName) {
-  this.firstName = firstName;
-  this.hand = new Hand();
-  this.dealer = false;
-};
-
-//Saves the total value of the current hand
-//also saves a "bust" boolean
-Hand.prototype._updateInternalProperties = function() {
-  this.total = 0;
-  
-};
-
-//Game class--accepts arbitrary number of player objects
-var Game = function(numOfPlayers) {
-  //Creates and shuffles a new deck
-  this.deck = new Deck();
-  this.deck.shuffle();
-  this.gameOver = false;
-  this.summary = 'Game has not started.'
-
-  //Creates a dealer and the specified # of players
-  this.players = [];
-
-  //Creates and stores the dealer
-  this.dealer = new Player('dealer');
-  this.dealer.dealer = true;
-  this.players.push(this.dealer);
-
-  //Creates and stores the players
-  for (var i=1; i<=numOfPlayers; i++) {
-    var player = new Player('player' + i.toString());
-    this.players.push(player);
+var Player = Backbone.Model.extend({
+  initialize: function(firstName) {
+    this.set({
+      firstName: firstName,
+      hand: new Hand(),
+      dealer: false
+    });
+  },
+  clearHand: function() {
+    this.set({
+      hand: new Hand()
+    })
   }
-};
+});
 
-//Deals hands to all players
-Game.prototype.startGame = function() {
-  //Deal two cards to all players
-  for (var i=1; i<=2; i++) {
-    this.dealCard(this.dealer);
-    this._eachPlayer(function(player) {
-      this.dealCard(player);
+var Game = Backbone.Model.extend({
+  //Creates and saves two players and a deck,
+  //then deals the initial hands
+  initialize: function() {
+    var player1 = new Player('player1');
+    var dealer = new Player('dealer');
+    dealer.dealer = true;
+    var players = [dealer, player1];
+
+    this.set({
+      deck: new Deck(),
+      gameOver: false,
+      players: players,
+      dealer: dealer,
+    });
+
+    this.dealHands();
+  },
+  //Loops over each player in the game and passes
+  //each as an argument to the given iterator
+  eachPlayer: function(iterator) {
+    var players = this.get('players');
+    for (var i=1; i<players.length; i++) {
+      iterator.call(this, players[i]);
+    }
+  },
+  //Creates and saves a new deck,
+  //clears all players' hands,
+  //then deals the initial hands
+  newGame: function() {
+    //Clears the hand for each player
+    this.eachPlayer(function(player) {
+      player.clearHand();
+    });
+
+    //Creates a new deck for the new game
+    this.set({
+      deck: new Deck(),
+      gameOver: false,
+    });
+
+    //Deals initial hands
+    this.dealHands();
+  },
+  //Deals the starting cards to each player
+  dealHands: function() {
+    for (var i=1; i<=2; i++) {
+      this.eachPlayer(function(player) {
+        this.dealCard(player);
+      })
+    }
+  },
+  //Deals a card to the specified player
+  dealCard: function(player) {
+    //Handles numeric or undefined input
+    if (typeof(player) === 'number') {
+      player = this.players[player];
+    } else if (player === undefined) {
+      player = this.players[1];
+    }
+
+    //Deals a card to this player's hand
+    player.get('hand').pushCard(this.get('deck').popRandomCard());
+  },
+  //Deals cards to the dealer and stores the game result
+  endGame: function() {
+    this.gameOver = true;
+
+    //Deals cards to the dealer
+    var dealer = this.get('dealer');
+    while (deal.get('hand').get('total') < 17) {
+      this.dealCard(dealer);
+    }
+
+    //Saves the results of the game
+    this.set({
+      gameOver: true,
     });
   }
+});
 
-  //Saves the current state of the game
-  this.summary = 'Dealer shows ' + this.dealer.hand.total + '. Hit?';
-};
-
-//Calls an iterator on each player in the game
-Game.prototype._eachPlayer = function(iterator) {
-  for (var i=1; i<this.players.length; i++) {
-    iterator.call(this, this.players[i]);
-  }
-};
-
-//Handles dealer behavior before the game ends,
-//then determines winners
-Game.prototype.endGame = function() {
-  this.gameOver = true;
-  while (this.dealer.hand.total < 17) {
-    this.dealCard(this.dealer);
-  }
-  this._eachPlayer(function(player) {
-    if (player.hand.bust) {
-      this.summary = player.firstName + ' is bust, and loses to the dealer.';
-    } else if (this.dealer.hand.bust) {
-      this.summary = 'Dealer is bust, ' + player.firstName + ' wins.';
-    } else if (player.hand.total > this.dealer.hand.total) {
-      this.summary = player.firstName + ' beats the dealer with a score of ' +
-        player.hand.total.toString() + ' vs ' + this.dealer.hand.total.toString() + '.';
-    } else if (player.hand.total === this.dealer.hand.total) {
-      this.summary = player.firstName + ' ties with the dealer with a score of ' +
-        player.hand.total.toString() + ' vs ' + this.dealer.hand.total.toString() + '.';
-    } else {
-      this.summary = player.firstName + ' loses to the dealer with a score of ' +
-        player.hand.total.toString() + ' vs ' + this.dealer.hand.total.toString() + '.';
-    }
-  });
-  console.log(this.summary);
-};
-
-//Deals a card from the game deck to a specific player
-//Accepts either a player object or the index of the player
-//If no arguments passed, defaults to the first player
-Game.prototype.dealCard = function(player) {
-  if (typeof(player) === 'number') {
-    player = this.players[player];
-  } else if (player === undefined) {
-    player = this.players[1];
-  }
-  player.hand.pushCard(this.deck.popFirstCard());
-  return player.hand.total;
-};
-
-//Checks whether the given player won the game
-Game.prototype.playerWon = function() {
-
-};
+    // this._eachPlayer(function(player) {
+    //   if (player.hand.bust) {
+    //     this.summary = player.firstName + ' is bust, and loses to the dealer.';
+    //   } else if (this.dealer.hand.bust) {
+    //     this.summary = 'Dealer is bust, ' + player.firstName + ' wins.';
+    //   } else if (player.hand.total > this.dealer.hand.total) {
+    //     this.summary = player.firstName + ' beats the dealer with a score of ' +
+    //       player.hand.total.toString() + ' vs ' + this.dealer.hand.total.toString() + '.';
+    //   } else if (player.hand.total === this.dealer.hand.total) {
+    //     this.summary = player.firstName + ' ties with the dealer with a score of ' +
+    //       player.hand.total.toString() + ' vs ' + this.dealer.hand.total.toString() + '.';
+    //   } else {
+    //     this.summary = player.firstName + ' loses to the dealer with a score of ' +
+    //       player.hand.total.toString() + ' vs ' + this.dealer.hand.total.toString() + '.';
+    //   }
+    // });
+    // console.log(this.summary);
