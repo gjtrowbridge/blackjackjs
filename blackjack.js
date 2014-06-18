@@ -25,10 +25,9 @@ var Card = Backbone.Model.extend({
   }
 });
 
-var Deck = Backbone.Model.extend({
+var Deck = Backbone.Collection.extend({
   //Creates and stores a new deck
   initialize: function() {
-    var cards = [];
     var suit = "Hearts";
     for (var i=0; i<52; i++) {
       var val = (i % 13) + 1;
@@ -39,24 +38,21 @@ var Deck = Backbone.Model.extend({
       } else if (i === 39) {
         suit = "Clubs";
       }
-      cards.push(new Card(suit, val));
+      this.add(new Card(suit, val));
     }
-    this.set({
-      cards: cards
-    });
   },
   //Logs all cards in the deck
   inspect: function() {
-    for (var i=0; i < this.get('cards').length; i++) {
-      console.log(this.get('cards').toString());
-    }
+    this.forEach(function(card) {
+      console.log(card.toString());
+    });
   },
   //Chooses a random index from among the remaining cards
   //Should be named to indicate that it's private, but Backbone 
   //doesn't allow this naming (apparently) and I didn't feel like
   //writing out a closure to make it truly private
   getRandomIndex: function() {
-    return Math.floor(Math.random() * this.get('cards').length);
+    return Math.floor(Math.random() * this.length);
   },
   //Gets a random card from the deck
   //This allows you to "play" without needing to shuffle
@@ -64,31 +60,33 @@ var Deck = Backbone.Model.extend({
     //Gets a random index
     var index = this.getRandomIndex();
 
-    //Returns the card at that index AND removes it from the array
-    return this.get('cards').splice(index,1)[0];
+    //Returns the card at that index AND removes it from the collection
+    var card = this.at(index);
+    this.remove(card);
+    return card;
   },
 
   //The two functions below are still available, but neither are
   //necessary if you're using popRandomCard()
 
   //Shuffles the deck (can also shuffle when some cards have been dealt already)
-  shuffle: function(num) {
-    if (num === undefined) {
-      num = 10000;
-    }
-    for (var i=0; i<num; i++) {
-      var ind1 = this.getRandomIndex();
-      var ind2 = this.getRandomIndex();
+  // shuffle: function(num) {
+  //   if (num === undefined) {
+  //     num = 10000;
+  //   }
+  //   for (var i=0; i<num; i++) {
+  //     var ind1 = this.getRandomIndex();
+  //     var ind2 = this.getRandomIndex();
 
-      var temp = this.get('cards')[ind1];
-      this.get('cards')[ind1] = this.get('cards')[ind2];
-      this.get('cards')[ind2] = temp;
-    }
-  },
-  //Removes and returns the card at the front of the deck
-  popFirstCard: function() {
-    return this.get('cards').shift();
-  }
+  //     var temp = this.get('cards')[ind1];
+  //     this.get('cards')[ind1] = this.get('cards')[ind2];
+  //     this.get('cards')[ind2] = temp;
+  //   }
+  // },
+  // //Removes and returns the card at the front of the deck
+  // popFirstCard: function() {
+  //   return this.get('cards').shift();
+  // }
 });
 
 var Hand = Backbone.Model.extend({
