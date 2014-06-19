@@ -18,7 +18,6 @@ var Card = Backbone.Model.extend({
       numVal: Math.min(val,10),
       stringVal: stringVal
     });
-
   },
   isAce: function() {
     return this.get('numVal') === 1;
@@ -32,6 +31,16 @@ var Deck = Backbone.Collection.extend({
   model: Card,
   //Creates and stores a new deck
   initialize: function() {
+    this.fillWithCards();
+    this.on('reset', this.fillWithCards, this);
+  },
+  //Logs all cards in the deck
+  inspect: function() {
+    this.forEach(function(card) {
+      console.log(card.toString());
+    });
+  },
+  fillWithCards: function() {
     var suit = "Hearts";
     for (var i=0; i<52; i++) {
       var val = (i % 13) + 1;
@@ -44,12 +53,6 @@ var Deck = Backbone.Collection.extend({
       }
       this.add(new Card(suit, val));
     }
-  },
-  //Logs all cards in the deck
-  inspect: function() {
-    this.forEach(function(card) {
-      console.log(card.toString());
-    });
   },
   //Chooses a random index from among the remaining cards
   //Should be named to indicate that it's private, but Backbone 
@@ -92,6 +95,13 @@ var Hand = Backbone.Collection.extend({
       total += 10;
     }
     return total;
+  },
+  //Can't use reset() because it doesn't fire
+  //model events
+  discard: function() {
+    while(this.length > 0) {
+      this.remove(this.at(0));
+    }
   }
 });
 
@@ -102,14 +112,27 @@ var Player = Backbone.Model.extend({
       hand: new Hand(),
       dealer: false
     });
+    this.on('change:dealer', function() {
+
+    });
   },
   hand: function() {
     return this.get('hand');
   },
   clearHand: function() {
-    this.set({
-      hand: new Hand()
-    })
+    this.get('hand').discard();
+  },
+  isDealer: function() {
+    return this.get('dealer');
+  },
+  hitMe: function() {
+    this.trigger('hitMe', this);
+  },
+  stay: function() {
+    this.trigger('stay', this);
+  },
+  getTotal: function() {
+    return this.get('hand').getTotal();
   }
 });
 
@@ -119,7 +142,7 @@ var Game = Backbone.Model.extend({
   initialize: function() {
     var player1 = new Player('player1');
     var dealer = new Player('dealer');
-    dealer.dealer = true;
+    dealer.set('dealer',true);
     var players = [dealer, player1];
 
     this.set({
@@ -148,11 +171,8 @@ var Game = Backbone.Model.extend({
       player.clearHand();
     });
 
-    //Creates a new deck for the new game
-    this.set({
-      deck: new Deck(),
-      gameOver: false,
-    });
+    //Resets the deck with all new cards
+    this.get('deck').reset();
 
     //Deals initial hands
     this.dealHands();
@@ -183,7 +203,7 @@ var Game = Backbone.Model.extend({
 
     //Deals cards to the dealer
     var dealer = this.get('dealer');
-    while (deal.get('hand').get('total') < 17) {
+    while (dealer.getTotal() < 17) {
       this.dealCard(dealer);
     }
 
