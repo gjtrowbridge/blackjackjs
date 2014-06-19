@@ -20,12 +20,16 @@ var Card = Backbone.Model.extend({
     });
 
   },
+  isAce: function() {
+    return this.get('numVal') === 1;
+  },
   toString: function() {
     return this.get('stringVal') + ' of ' + this.get('suit');
   }
 });
 
 var Deck = Backbone.Collection.extend({
+  model: Card,
   //Creates and stores a new deck
   initialize: function() {
     var suit = "Hearts";
@@ -64,73 +68,30 @@ var Deck = Backbone.Collection.extend({
     var card = this.at(index);
     this.remove(card);
     return card;
-  },
-
-  //The two functions below are still available, but neither are
-  //necessary if you're using popRandomCard()
-
-  //Shuffles the deck (can also shuffle when some cards have been dealt already)
-  // shuffle: function(num) {
-  //   if (num === undefined) {
-  //     num = 10000;
-  //   }
-  //   for (var i=0; i<num; i++) {
-  //     var ind1 = this.getRandomIndex();
-  //     var ind2 = this.getRandomIndex();
-
-  //     var temp = this.get('cards')[ind1];
-  //     this.get('cards')[ind1] = this.get('cards')[ind2];
-  //     this.get('cards')[ind2] = temp;
-  //   }
-  // },
-  // //Removes and returns the card at the front of the deck
-  // popFirstCard: function() {
-  //   return this.get('cards').shift();
-  // }
+  }
 });
 
-var Hand = Backbone.Model.extend({
-  initialize: function() {
-    this.set({
-      cards: [],
-      bust: false,
-      total: 0
+var Hand = Backbone.Collection.extend({
+  model: Card,
+  inspect: function() {
+    this.forEach(function(card) {
+      console.log(card.toString());
     });
   },
-  //Pushes a card to the hand
-  pushCard: function(card) {
-    this.get('cards').push(card);
-    this.updateInternalProperties();
-  },
-  //Updates "bust", "total"
-  updateInternalProperties: function() {
+  getTotal: function() {
     var aces = 0;
-    var newTotal = 0;
-
-    //Counts up combined value of all cards
-    //In this inital count, aces = 1
-    for (var i=0; i<this.get('cards').length; i++) {
-      var card = this.get('cards')[i];
-      newTotal += card.get('numVal');
-
-      //Counts # of aces
-      if (card.numVal === 1) {
+    var total = 0;
+    this.forEach(function(card) {
+      total += card.get('numVal');
+      if (card.isAce()) {
         aces++;
       }
-    }
-
-    //Changes ace values to 11 where appropriate
-    while ((newTotal + 10 <= 21) && (aces > 0)) {
+    });
+    while ((total + 10 <= 21) && (aces > 0)) {
       aces--;
-      newTotal += 10;
+      total += 10;
     }
-
-    if (newTotal > 21) {
-      this.set({bust:true});
-    } else {
-      this.set({bust:false});
-    }
-    this.set({total:newTotal});
+    return total;
   }
 });
 
@@ -211,7 +172,7 @@ var Game = Backbone.Model.extend({
     }
 
     //Deals a card to this player's hand
-    player.get('hand').pushCard(this.get('deck').popRandomCard());
+    player.get('hand').add(this.get('deck').popRandomCard());
   },
   //Deals cards to the dealer and stores the game result
   endGame: function() {
@@ -229,21 +190,3 @@ var Game = Backbone.Model.extend({
     });
   }
 });
-
-    // this._eachPlayer(function(player) {
-    //   if (player.hand.bust) {
-    //     this.summary = player.firstName + ' is bust, and loses to the dealer.';
-    //   } else if (this.dealer.hand.bust) {
-    //     this.summary = 'Dealer is bust, ' + player.firstName + ' wins.';
-    //   } else if (player.hand.total > this.dealer.hand.total) {
-    //     this.summary = player.firstName + ' beats the dealer with a score of ' +
-    //       player.hand.total.toString() + ' vs ' + this.dealer.hand.total.toString() + '.';
-    //   } else if (player.hand.total === this.dealer.hand.total) {
-    //     this.summary = player.firstName + ' ties with the dealer with a score of ' +
-    //       player.hand.total.toString() + ' vs ' + this.dealer.hand.total.toString() + '.';
-    //   } else {
-    //     this.summary = player.firstName + ' loses to the dealer with a score of ' +
-    //       player.hand.total.toString() + ' vs ' + this.dealer.hand.total.toString() + '.';
-    //   }
-    // });
-    // console.log(this.summary);
