@@ -103,6 +103,9 @@ var Player = Backbone.Model.extend({
       dealer: false
     });
   },
+  hand: function() {
+    return this.get('hand');
+  },
   clearHand: function() {
     this.set({
       hand: new Hand()
@@ -132,7 +135,7 @@ var Game = Backbone.Model.extend({
   //each as an argument to the given iterator
   eachPlayer: function(iterator) {
     var players = this.get('players');
-    for (var i=1; i<players.length; i++) {
+    for (var i=0; i<players.length; i++) {
       iterator.call(this, players[i]);
     }
   },

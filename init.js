@@ -11,10 +11,10 @@ app.hand = new Hand();
 app.handView = new HandView({collection: app.hand});
 
 
-app.game = new Game();
 app.gameView = new GameView({model: app.game});
 
 $(function() {
-  $('#container').append(app.handView.$el);
+  $('#container').append(app.gameView.$el);
+  app.game.newGame();
 });
 

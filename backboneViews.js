@@ -3,7 +3,7 @@ var CardView = Backbone.View.extend({
   className: 'card',
   template: _.template('<img src="cards/<%= val.toString() %>_<%= suit.toLowerCase() %>.png" />'),
   initialize: function() {
-    //this.model.on('change', _.bind(this.render, this));
+    this.model.on('change', this.render, this);
     this.render();
   },
   render: function() {
@@ -17,6 +17,10 @@ var HandView = Backbone.View.extend({
   initialize: function() {
     this.collection.on('change', _.bind(this.render, this));
     this.collection.on('add', this.addOne, this);
+    for (var i=0; i<this.collection.length; i++) {
+      var card = this.collection.at(i);
+      this.addOne(card);
+    }
     this.render();
   },
   render: function() {
@@ -32,19 +36,35 @@ var PlayerView = Backbone.View.extend({
   tagName: 'div',
   className: 'player',
   initialize: function() {
-    this.model.on('change', _.bind(this.render, this));
+    this.model.on('change', this.render, this);
+    this.handView = new HandView({collection: this.model.hand()});
+    this.render();
+  },
+  template: _.template('Player name is: <%= firstName %>'),
+  render: function() {
+    var attributes = this.model.toJSON();
+    return this.$el.html([
+      this.template(attributes),
+      this.handView.$el
+    ]);
   }
+
 });
 
 var GameView = Backbone.View.extend({
   tagname: 'div',
   className: 'game',
-  template: _.template('This is a game!'),
   initialize: function() {
-    this.model.on('change', _.bind(this.render, this));
+    this.model.on('change', this.render, this);
+
+    this.model.eachPlayer(function(player) {
+      var playerView = new PlayerView({model: player});
+      this.$el.append(playerView.$el);
+    }.bind(this));
+    
     this.render();
   },
   render: function() {
-    this.$el.html(this.template());
+    return this.$el;
   }
 });
