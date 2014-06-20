@@ -1,25 +1,32 @@
 var CardView = Backbone.View.extend({
   tagName: 'span',
   className: 'card',
-  template: _.template('<img src="cards/<%= val.toString() %>_<%= suit.toLowerCase() %>.png" />'),
+  template: _.template('<img class="card" src="<%= source %>" />'),
   initialize: function() {
     this.model.on('change', this.render, this);
-    this.render();
     this.model.on('remove', function() {
       this.$el.html('');
     }, this);
     this.model.on('add', this.render, this);
+    this.render();
   },
   render: function() {
     var attributes = this.model.toJSON();
-    return this.$el.html(this.template(attributes));
+    return this.$el.html(this.template({source: this.getSource()}));
   },
+  getSource: function() {
+    if (this.model.isHidden()) {
+      return 'cards/playing-card-back.jpg';
+    } else {
+      return 'cards/' + this.model.get('val').toString() + '_' + this.model.get('suit').toLowerCase() + '.png';
+    }
+  }
 });
 var HandView = Backbone.View.extend({
   tagName: 'div',
   className: 'hand',
   initialize: function() {
-    this.collection.on('change', this.render, this);
+    //this.collection.on('change', this.render, this);
     this.collection.on('add', this.addOne, this);
 
     for (var i=0; i<this.collection.length; i++) {
@@ -54,7 +61,8 @@ var PlayerView = Backbone.View.extend({
     return this.$el.html([
       this.template(attributes),
       this.handView.$el,
-      this.renderButtons()
+      this.renderTotals(),
+      this.renderButtons(),
     ]);
   },
   renderButtons: function() {
@@ -64,8 +72,13 @@ var PlayerView = Backbone.View.extend({
       return '<button class="hit-btn btn btn-default">Hit Me!</button><button class="stay-btn btn btn-default">Stay</button>';
     }
   },
+  renderTotals: function() {
+    return '<p>Total: ' + this.model.getTotal() + '</p>';
+    return '<p>Total: ' + this.model.getTotal() + '</p>';
+  },
   playerHits: function() {
     this.model.hitMe();
+    this.render();
   },
   playerStays: function() {
     this.model.stay();

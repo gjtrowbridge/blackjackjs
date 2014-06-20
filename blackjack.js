@@ -16,7 +16,8 @@ var Card = Backbone.Model.extend({
       suit: suit,
       val: val,
       numVal: Math.min(val,10),
-      stringVal: stringVal
+      stringVal: stringVal,
+      hidden: false
     });
   },
   isAce: function() {
@@ -24,6 +25,9 @@ var Card = Backbone.Model.extend({
   },
   toString: function() {
     return this.get('stringVal') + ' of ' + this.get('suit');
+  },
+  isHidden: function() {
+    return this.get('hidden');
   }
 });
 
@@ -81,13 +85,16 @@ var Hand = Backbone.Collection.extend({
       console.log(card.toString());
     });
   },
-  getTotal: function() {
+  getTotal: function(ignoreHidden) {
     var aces = 0;
     var total = 0;
     this.forEach(function(card) {
-      total += card.get('numVal');
-      if (card.isAce()) {
-        aces++;
+      //Only sums up cards that are not hidden
+      if (!card.get('hidden')) {
+        total += card.get('numVal');
+        if (card.isAce()) {
+          aces++;
+        }
       }
     });
     while ((total + 10 <= 21) && (aces > 0)) {
@@ -110,11 +117,17 @@ var Player = Backbone.Model.extend({
     this.set({
       firstName: firstName,
       hand: new Hand(),
-      dealer: false
+      dealer: false,
     });
-    this.on('change:dealer', function() {
-
-    });
+    this.get('hand').on('change', function(){
+      this.trigger('change', this);
+    }, this);
+    this.get('hand').on('add', function(){
+      this.trigger('change', this);
+    }, this);
+    this.get('hand').on('remove', function(){
+      this.trigger('change', this);
+    }, this);
   },
   hand: function() {
     return this.get('hand');
@@ -171,6 +184,10 @@ var Game = Backbone.Model.extend({
       player.clearHand();
     });
 
+    this.set({
+      gameOver: false
+    });
+
     //Resets the deck with all new cards
     this.get('deck').reset();
 
@@ -181,28 +198,39 @@ var Game = Backbone.Model.extend({
   dealHands: function() {
     for (var i=1; i<=2; i++) {
       this.eachPlayer(function(player) {
-        this.dealCard(player);
+        if (player.isDealer() && i === 1) {
+          this.dealCard(player, true);
+        } else {
+          this.dealCard(player, false);
+        }
       })
     }
   },
   //Deals a card to the specified player
-  dealCard: function(player) {
-    //Handles numeric or undefined input
-    if (typeof(player) === 'number') {
-      player = this.players[player];
-    } else if (player === undefined) {
-      player = this.players[1];
-    }
+  dealCard: function(player, hidden) {
+    //Only deals a card if the game is still going on
+    if (!this.get('gameOver')) {
+      //Handles numeric or undefined input
+      if (typeof(player) === 'number') {
+        player = this.players[player];
+      } else if (player === undefined) {
+        player = this.players[1];
+      }
 
-    //Deals a card to this player's hand
-    player.get('hand').add(this.get('deck').popRandomCard());
+      //Deals a card to this player's hand
+      var card = this.get('deck').popRandomCard();
+      card.set({hidden:hidden});
+
+      player.get('hand').add(card);
+    }
   },
   //Deals cards to the dealer and stores the game result
   endGame: function() {
-    this.gameOver = true;
 
     //Deals cards to the dealer
     var dealer = this.get('dealer');
+    dealer.hand().at(0).set({hidden:false});
+
     while (dealer.getTotal() < 17) {
       this.dealCard(dealer);
     }
