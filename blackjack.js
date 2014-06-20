@@ -165,6 +165,12 @@ var Game = Backbone.Model.extend({
       dealer: dealer,
     });
 
+    player1.on('change', function() {
+      if (player1.getTotal() > 21) {
+        this.endGame();
+      }
+    }, this);
+
     this.dealHands();
   },
   //Loops over each player in the game and passes
