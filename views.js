@@ -96,16 +96,9 @@ var GameView = Backbone.View.extend({
   initialize: function() {
     this.model.eachPlayer(function(player) {
       var playerView = new PlayerView({model: player});
-
-      player.on('hitMe', function(player) {
-        this.model.dealCard(player);
-      }, this);
-      player.on('stay', function(player) {
-        this.model.endGame();
-      }, this);
-
       this.$el.append(playerView.$el);
     }.bind(this));
+
     this.$el.append(this.template(this.model.toJSON()));
     this.render();
   },

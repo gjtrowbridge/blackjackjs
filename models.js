@@ -165,6 +165,13 @@ var Game = Backbone.Model.extend({
       dealer: dealer,
     });
 
+    player1.on('hitMe', function() {
+      this.dealCard(player1);
+    }, this);
+    player1.on('stay', function() {
+      this.endGame();
+    }, this);
+
     player1.on('change', function() {
       if (player1.getTotal() > 21) {
         this.endGame();
@@ -190,6 +197,7 @@ var Game = Backbone.Model.extend({
       player.clearHand();
     });
 
+    
     this.set({
       gameOver: false
     });
@@ -244,6 +252,12 @@ var Game = Backbone.Model.extend({
     //Saves the results of the game
     this.set({
       gameOver: true,
+    });
+  },
+  getPlayerTotals: function() {
+    var result = [];
+    this.eachPlayer(function(player) {
+      result.push(player.getTotal());
     });
   }
 });
