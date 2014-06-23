@@ -55,7 +55,7 @@ var PlayerView = Backbone.View.extend({
     this.handView = new HandView({collection: this.model.hand()});
     this.render();
   },
-  template: _.template('<h1><%= firstName.toUpperCase() %></h1>'),
+  template: _.template('<h1 class="name"><%= firstName.toUpperCase() %></h1>'),
   render: function() {
     var attributes = this.model.toJSON();
     return this.$el.html([
@@ -69,12 +69,12 @@ var PlayerView = Backbone.View.extend({
     if (this.model.isDealer()) {
       return '';
     } else {
-      return '<button class="hit-btn btn btn-default">Hit Me!</button><button class="stay-btn btn btn-default">Stay</button>';
+      return '<button class="hit-btn">Hit Me! <span class="glyphicon glyphicon-play"></span></button><button class="stay-btn">Stay  <span class="glyphicon glyphicon-stop"></span></button>';
     }
   },
   renderTotals: function() {
-    return '<p>Total: ' + this.model.getTotal() + '</p>';
-    return '<p>Total: ' + this.model.getTotal() + '</p>';
+    return '<p class="total">Total: ' + this.model.getTotal() + '</p>';
+    return '<p class="total">Total: ' + this.model.getTotal() + '</p>';
   },
   playerHits: function() {
     this.model.hitMe();
@@ -89,7 +89,7 @@ var PlayerView = Backbone.View.extend({
 var GameView = Backbone.View.extend({
   tagname: 'div',
   className: 'game',
-  template: _.template('<button class="newgame-btn btn btn-default">Start New Game</button>'),
+  template: _.template('<button class="newgame-btn">Start New Game  <span class="glyphicon glyphicon-cog"></span></button>'),
   events: {
     'click button.newgame-btn': 'newGame'
   },
