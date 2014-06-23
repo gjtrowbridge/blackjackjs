@@ -146,7 +146,7 @@ var Player = Backbone.Model.extend({
   },
   getTotal: function() {
     return this.get('hand').getTotal();
-  }
+  },
 });
 
 var Game = Backbone.Model.extend({
@@ -254,10 +254,13 @@ var Game = Backbone.Model.extend({
       gameOver: true,
     });
   },
-  getPlayerTotals: function() {
-    var result = [];
-    this.eachPlayer(function(player) {
-      result.push(player.getTotal());
-    });
+  getResult: function() {
+    return "not yet implemented!";
   }
+  // getPlayerTotals: function() {
+  //   var result = [];
+  //   this.eachPlayer(function(player) {
+  //     result.push(player.getTotal());
+  //   });
+  // }
 });

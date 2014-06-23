@@ -73,8 +73,12 @@ var PlayerView = Backbone.View.extend({
     }
   },
   renderTotals: function() {
-    return '<p class="total">Total: ' + this.model.getTotal() + '</p>';
-    return '<p class="total">Total: ' + this.model.getTotal() + '</p>';
+    var total = this.model.getTotal();
+    if (total > 21) {
+      return '<p class="total">Total: ' + this.model.getTotal() + ' (Bust)</p>';
+    } else {
+      return '<p class="total">Total: ' + this.model.getTotal() + '</p>';
+    }
   },
   playerHits: function() {
     this.model.hitMe();
@@ -94,13 +98,23 @@ var GameView = Backbone.View.extend({
     'click button.newgame-btn': 'newGame'
   },
   initialize: function() {
+
+    //Adds the player views
     this.model.eachPlayer(function(player) {
       var playerView = new PlayerView({model: player});
       this.$el.append(playerView.$el);
     }.bind(this));
 
+    //Adds the bottom part
+    this.$result = $('<p>',{className:'result'});
+    this.$el.append(this.$result);
     this.$el.append(this.template(this.model.toJSON()));
+
+    //Renders the result
     this.render();
+  },
+  render: function() {
+    this.$result.html(this.model.getResult());
   },
   newGame: function() {
     this.model.newGame();
