@@ -74,10 +74,13 @@ var PlayerView = Backbone.View.extend({
   },
   renderTotals: function() {
     var total = this.model.getTotal();
+    var hasBlackJack = this.model.hasBlackJack();
     if (total > 21) {
-      return '<p class="total">Total: ' + this.model.getTotal() + ' (Bust)</p>';
+      return '<p class="total">Total: ' + total + ' (Bust)</p>';
+    } else if (hasBlackJack) {
+      return '<p class="total">Blackjack!</p>';
     } else {
-      return '<p class="total">Total: ' + this.model.getTotal() + '</p>';
+      return '<p class="total">Total: ' + total + '</p>';
     }
   },
   playerHits: function() {
