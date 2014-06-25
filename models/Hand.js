@@ -23,6 +23,14 @@ var Hand = Backbone.Collection.extend({
     }
     return total;
   },
+  //Not the fastest way to do this, but easy, and speed
+  //makes very little difference here.
+  isBlackjack: function() {
+    return (this.getTotal() === 21 && this.length === 2);
+  },
+  isBust: function() {
+    return this.getTotal() > 21;
+  },
   //Can't use reset() because it doesn't fire
   //model events
   discard: function() {

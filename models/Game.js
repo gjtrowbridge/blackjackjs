@@ -2,10 +2,9 @@ var Game = Backbone.Model.extend({
   //Creates and saves two players and a deck,
   //then deals the initial hands
   initialize: function() {
-    var player1 = new Player('player1');
     var dealer = new Player('dealer');
     dealer.set('dealer',true);
-    var players = [dealer, player1];
+    var players = [dealer, new Player('Player 1')];
 
     this.set({
       deck: new Deck(),
@@ -14,23 +13,31 @@ var Game = Backbone.Model.extend({
       dealer: dealer,
     });
 
-    player1.on('hitMe', function() {
-      this.dealCard(player1);
-    }, this);
-    player1.on('stay', function() {
-      this.endGame();
-    }, this);
+    this.eachPlayer(function(player) {
+      //Only does this for non-dealer players
+      if (!player.get('dealer')) {
+        player.on('hitMe', function() {
+          this.dealCard(player);
+        }, this);
+        player.on('stay', function() {
+          this.endGame();
+        }, this);
 
-    player1.on('change', function() {
-      if (player1.getTotal() > 21) {
-        this.endGame();
+        player.on('change', function() {
+          if (player.getTotal() > 21) {
+            this.endGame();
+          }
+        }, this);
       }
-    }, this);
+    });
 
     this.dealHands();
   },
   //Loops over each player in the game and passes
   //each as an argument to the given iterator
+
+  //Probably not necessary, as this implementation
+  //currently has only one non-dealer player...
   eachPlayer: function(iterator) {
     var players = this.get('players');
     for (var i=0; i<players.length; i++) {
@@ -44,6 +51,7 @@ var Game = Backbone.Model.extend({
     //Clears the hand for each player
     this.eachPlayer(function(player) {
       player.clearHand();
+      player.clearBets();
     });
 
     
@@ -56,6 +64,8 @@ var Game = Backbone.Model.extend({
 
     //Deals initial hands
     this.dealHands();
+
+    this.trigger('newGame');
   },
   //Deals the starting cards to each player
   dealHands: function() {
@@ -102,14 +112,52 @@ var Game = Backbone.Model.extend({
     this.set({
       gameOver: true,
     });
+
+    this.trigger('gameOver');
   },
-  getResult: function() {
-    return "not yet implemented!";
+  getResults: function() {
+    if (this.get('gameOver')) {
+      var dealer = this.get('players')[0];
+      var dealerTotal = dealer.getTotal();
+      var dealerBlackjack = dealer.hasBlackjack();
+      var dealerBust = dealer.isBust();
+
+      var results = [];
+      this.eachPlayer(function(player) {
+        
+        if (!player.get('dealer')) {
+          var playerResult = '';
+          var playerName = player.get('firstName');
+          
+          var playerTotal = player.getTotal();
+          var playerBlackjack = player.hasBlackjack();
+          var playerBust = player.isBust();
+
+          if (playerBust) {
+            playerResult = playerName + ' is bust, and loses.';
+          } else if (playerBlackjack) {
+            if (dealerBlackjack) {
+              playerResult = 'Both dealer and ' + playerName + ' have blackjack. Draw.';
+            } else {
+              playerResult = playerName + ' has blackjack! Winner!';
+            }
+          } else if (dealerBlackjack) {
+            playerResult = 'Dealer has a blackjack. ' + playerName + ' loses.';
+          } else if (dealerBust) {
+            playerResult = 'Dealer is bust. ' + playerName + ' wins.'
+          } else if (dealerTotal > playerTotal) {
+            playerResult = 'Dealer wins with a score of ' + dealerTotal + '. ' + playerName + ' loses.';
+          } else if (dealerTotal === playerTotal) {
+            playerResult = 'Both dealer and ' + playerName + ' have a score of ' + dealerTotal + '. Draw.';
+          } else {
+            playerResult = playerName + ' wins with a score of ' + playerTotal + '.';
+          }
+          results.push(playerResult);
+        }
+      });
+      return results;
+    } else {
+      return [];
+    }
   }
-  // getPlayerTotals: function() {
-  //   var result = [];
-  //   this.eachPlayer(function(player) {
-  //     result.push(player.getTotal());
-  //   });
-  // }
 });
