@@ -5,7 +5,8 @@ var PlayerView = Backbone.View.extend({
     'click button.hit-btn': 'playerHits',
     'click button.stay-btn': 'playerStays',
     'click button.bet-up': 'playerIncreasesBet',
-    'click button.bet-down': 'playerDecreasesBet'
+    'click button.bet-down': 'playerDecreasesBet',
+    'click button.end-betting': 'playerFinishesBetting'
   },
   initialize: function() {
     this.model.on('change', this.render, this);
@@ -28,10 +29,14 @@ var PlayerView = Backbone.View.extend({
     if (this.model.isDealer()) {
       return '';
     } else {
-      return  '<div class="bet"><p><span>Current Bet: $' + this.model.get('bet') + '</span>' +
-              ' | <span>You have: $' + this.model.get('chips') + '</span></p></div>' +
-              '<button class="bet bet-down">Decrease Bet <span class="glyphicon glyphicon-minus"></span></button>' +
-              '<button class="bet bet-up">Increase Bet <span class="glyphicon glyphicon-plus"></span></button>';
+      var result =  '<div class="bet"><p><span>Current Bet: $' + this.model.get('bet') + '</span>' +
+                    ' | <span>You have: $' + this.model.get('chips') + '</span></p></div>';
+      if (this.model.get('betting')) {
+        result += '<button class="bet bet-down">Decrease Bet <span class="glyphicon glyphicon-minus"></span></button>' +
+                  '<button class="bet end-betting">Done Betting<span class="glyphicon"></span></button>' +
+                  '<button class="bet bet-up">Increase Bet <span class="glyphicon glyphicon-plus"></span></button>';
+      }
+      return result;
     }
   },
   renderButtons: function() {
@@ -57,6 +62,10 @@ var PlayerView = Backbone.View.extend({
   },
   playerStays: function() {
     this.model.stay();
+  },
+  playerFinishesBetting: function() {
+    this.model.set('betting',false);
+    this.render();
   },
   playerIncreasesBet: function() {
     this.model.increaseBet();

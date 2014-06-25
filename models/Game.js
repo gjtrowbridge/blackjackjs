@@ -6,6 +6,7 @@ var Game = Backbone.Model.extend({
     dealer.set('dealer',true);
     var players = [dealer, new Player('Player 1')];
 
+    //Sets up 
     this.set({
       deck: new Deck(),
       gameOver: false,
@@ -13,8 +14,8 @@ var Game = Backbone.Model.extend({
       dealer: dealer,
     });
 
+    //Binds certain events to all non-dealer players
     this.eachPlayer(function(player) {
-      //Only does this for non-dealer players
       if (!player.get('dealer')) {
         player.on('hitMe', function() {
           this.dealCard(player);
@@ -22,16 +23,21 @@ var Game = Backbone.Model.extend({
         player.on('stay', function() {
           this.endGame();
         }, this);
-
         player.on('change', function() {
           if (player.getTotal() > 21) {
             this.endGame();
           }
         }, this);
+        player.on('change:betting', function() {
+          this.eachPlayer(function(player) {
+            player.unhideHand();
+          });
+        }, this);
       }
     });
 
-    this.dealHands();
+    //Finishes setting up
+    this.newGame();
   },
   //Loops over each player in the game and passes
   //each as an argument to the given iterator
@@ -54,9 +60,8 @@ var Game = Backbone.Model.extend({
       player.clearBets();
     });
 
-    
     this.set({
-      gameOver: false
+      gameOver: false,
     });
 
     //Resets the deck with all new cards
@@ -67,16 +72,19 @@ var Game = Backbone.Model.extend({
 
     this.trigger('newGame');
   },
+  startGame: function() {
+    //unhide hands
+    this.eachPlayer(function(player) {
+      player.unhideHand(false);
+    });
+
+  },
   //Deals the starting cards to each player
   dealHands: function() {
     for (var i=1; i<=2; i++) {
       this.eachPlayer(function(player) {
-        if (player.isDealer() && i === 1) {
-          this.dealCard(player, true);
-        } else {
-          this.dealCard(player, false);
-        }
-      })
+        this.dealCard(player, true);
+      });
     }
   },
   //Deals a card to the specified player
