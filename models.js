@@ -80,19 +80,12 @@ var Deck = Backbone.Collection.extend({
 
 var Hand = Backbone.Collection.extend({
   model: Card,
-  initialize: function() {
-    this.discard();
-    this.on('add', this.updateTotals, this);
-    this.total = 0;
-    this.isBlackjack = false;
-  },
   inspect: function() {
     this.forEach(function(card) {
       console.log(card.toString());
     });
   },
-  updateTotals: function() {
-    console.log('updating');
+  getTotal: function(ignoreHidden) {
     var aces = 0;
     var total = 0;
     this.forEach(function(card) {
@@ -108,16 +101,11 @@ var Hand = Backbone.Collection.extend({
       aces--;
       total += 10;
     }
-    if (total === 21 && this.length === 2) {
-      this.isBlackjack = true;
-    }
-    this.total = total;
+    return total;
   },
   //Can't use reset() because it doesn't fire
   //model events
   discard: function() {
-    this.set('total', 0);
-    this.set('isBlackjack', false);
     while(this.length > 0) {
       this.remove(this.at(0));
     }
@@ -157,11 +145,8 @@ var Player = Backbone.Model.extend({
     this.trigger('stay', this);
   },
   getTotal: function() {
-    return this.get('hand').total;
+    return this.get('hand').getTotal();
   },
-  hasBlackJack: function() {
-    return this.get('hand').isBlackjack;
-  }
 });
 
 var Game = Backbone.Model.extend({
@@ -270,13 +255,12 @@ var Game = Backbone.Model.extend({
     });
   },
   getResult: function() {
-    var results = {};
-    this.eachPlayer(function(player) {
-      var total = player.getTotal;
-      var hasBlackJack = player.hasBlackJack;
-      
-      
-    });
     return "not yet implemented!";
   }
+  // getPlayerTotals: function() {
+  //   var result = [];
+  //   this.eachPlayer(function(player) {
+  //     result.push(player.getTotal());
+  //   });
+  // }
 });
