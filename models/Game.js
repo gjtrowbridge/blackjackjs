@@ -1,0 +1,115 @@
+var Game = Backbone.Model.extend({
+  //Creates and saves two players and a deck,
+  //then deals the initial hands
+  initialize: function() {
+    var player1 = new Player('player1');
+    var dealer = new Player('dealer');
+    dealer.set('dealer',true);
+    var players = [dealer, player1];
+
+    this.set({
+      deck: new Deck(),
+      gameOver: false,
+      players: players,
+      dealer: dealer,
+    });
+
+    player1.on('hitMe', function() {
+      this.dealCard(player1);
+    }, this);
+    player1.on('stay', function() {
+      this.endGame();
+    }, this);
+
+    player1.on('change', function() {
+      if (player1.getTotal() > 21) {
+        this.endGame();
+      }
+    }, this);
+
+    this.dealHands();
+  },
+  //Loops over each player in the game and passes
+  //each as an argument to the given iterator
+  eachPlayer: function(iterator) {
+    var players = this.get('players');
+    for (var i=0; i<players.length; i++) {
+      iterator.call(this, players[i]);
+    }
+  },
+  //Creates and saves a new deck,
+  //clears all players' hands,
+  //then deals the initial hands
+  newGame: function() {
+    //Clears the hand for each player
+    this.eachPlayer(function(player) {
+      player.clearHand();
+    });
+
+    
+    this.set({
+      gameOver: false
+    });
+
+    //Resets the deck with all new cards
+    this.get('deck').reset();
+
+    //Deals initial hands
+    this.dealHands();
+  },
+  //Deals the starting cards to each player
+  dealHands: function() {
+    for (var i=1; i<=2; i++) {
+      this.eachPlayer(function(player) {
+        if (player.isDealer() && i === 1) {
+          this.dealCard(player, true);
+        } else {
+          this.dealCard(player, false);
+        }
+      })
+    }
+  },
+  //Deals a card to the specified player
+  dealCard: function(player, hidden) {
+    //Only deals a card if the game is still going on
+    if (!this.get('gameOver')) {
+      //Handles numeric or undefined input
+      if (typeof(player) === 'number') {
+        player = this.players[player];
+      } else if (player === undefined) {
+        player = this.players[1];
+      }
+
+      //Deals a card to this player's hand
+      var card = this.get('deck').popRandomCard();
+      card.set({hidden:hidden});
+
+      player.get('hand').add(card);
+    }
+  },
+  //Deals cards to the dealer and stores the game result
+  endGame: function() {
+
+    //Deals cards to the dealer
+    var dealer = this.get('dealer');
+    dealer.hand().at(0).set({hidden:false});
+
+    while (dealer.getTotal() < 17) {
+      this.dealCard(dealer);
+    }
+
+    //Saves the results of the game
+    this.set({
+      gameOver: true,
+    });
+  },
+  getResult: function() {
+    return "not yet implemented!";
+  }
+  // getPlayerTotals: function() {
+  //   var result = [];
+  //   this.eachPlayer(function(player) {
+  //     result.push(player.getTotal());
+  //   });
+  // }
+});
