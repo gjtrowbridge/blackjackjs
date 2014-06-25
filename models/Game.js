@@ -58,6 +58,7 @@ var Game = Backbone.Model.extend({
     this.eachPlayer(function(player) {
       player.clearHand();
       player.clearBets();
+      player.set('betting', true)
     });
 
     this.set({

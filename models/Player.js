@@ -6,7 +6,8 @@ var Player = Backbone.Model.extend({
       dealer: false,
       chips: 100,
       bet: 5,
-      betting: true
+      betting: true,
+      result: ''
     });
     this.get('hand').on('change', function(){
       this.trigger('change', this);
@@ -76,5 +77,8 @@ var Player = Backbone.Model.extend({
       this.set({bet: bet-5});
       this.set({chips: chips+5});
     }
+  },
+  calculateResult: function(dealer) {
+
   }
 });
