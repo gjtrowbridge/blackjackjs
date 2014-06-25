@@ -40,7 +40,7 @@ var PlayerView = Backbone.View.extend({
     }
   },
   renderButtons: function() {
-    if (this.model.isDealer()) {
+    if (this.model.isDealer() || this.model.get('betting')) {
       return '';
     } else {
       return '<div><button class="hit-btn">Hit Me! <span class="glyphicon glyphicon-play"></span></button><button class="stay-btn">Stay  <span class="glyphicon glyphicon-stop"></span></button></div>';
