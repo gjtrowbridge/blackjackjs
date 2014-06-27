@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/gjtrowbridge/blackjackjs/issues"
   },
-  "homepage": "https://github.com/gjtrowbridge/blackjackjs"
+  "homepage": "https://github.com/gjtrowbridge/blackjackjs",
+  "devDependencies": {
+    "bower": "^1.3.5"
+  }
 }
