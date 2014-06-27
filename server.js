@@ -5,6 +5,14 @@ var path = require('path');
 
 var port = process.env.PORT || 8888;
  
+var mimeTypes = {
+    "html": "text/html",
+    "jpeg": "image/jpeg",
+    "jpg": "image/jpeg",
+    "png": "image/png",
+    "js": "text/javascript",
+    "css": "text/css"};
+
 http.createServer(function(request, response) {
  
   var uri = url.parse(request.url).pathname;
@@ -22,6 +30,7 @@ http.createServer(function(request, response) {
       return;
     }
  
+    
     fs.readFile(filename, "binary", function(err, file) {
       if(err) {        
         response.writeHead(500, {"Content-Type": "text/plain"});
@@ -30,11 +39,12 @@ http.createServer(function(request, response) {
         return;
       }
  
-      response.writeHead(200);
+      var mimeType = mimeTypes[path.extname(filename).split(".")[1]];
+      response.writeHead(200, mimeType);
       response.write(file, "binary");
       response.end();
     });
   });
-}).listen(parseInt(port, 10));
+}).listen(port);
  
 console.log("Static file server running at\n  => http://localhost:" + port + "/\nCTRL + C to shutdown");
