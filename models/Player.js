@@ -5,7 +5,7 @@ var Player = Backbone.Model.extend({
       hand: new Hand(),
       dealer: false,
       chips: 100,
-      bet: 5,
+      bet: 0,
       betting: true,
       result: '',
       resultKey: 'loss'
@@ -42,15 +42,6 @@ var Player = Backbone.Model.extend({
       }
     }
   },
-  clearBets: function() {
-    var chips = this.get('chips');
-    if (chips > 0) {
-      this.set('bet',5);
-      this.set('chips', chips - 5);
-    } else {
-      this.set('bet', 0);
-    }
-  },
   isDealer: function() {
     return this.get('dealer');
   },
@@ -84,6 +75,26 @@ var Player = Backbone.Model.extend({
       this.set({bet: bet-5});
       this.set({chips: chips+5});
     }
+  },
+  resolveBetting: function() {
+    var resultKey = this.get('resultKey');
+    var bet = this.get('bet');
+    var chips = this.get('chips');
+    var winnings = 0;
+
+    if (resultKey === 'blackjack') {
+      winnings = bet * 2.5;
+    } else if (resultKey === 'win') {
+      winnings = bet * 2;
+    } else if (resultKey === 'tie') {
+      winnings = bet;
+    } else {
+      winnings = 0;
+    }
+    this.set({
+      bet: 0,
+      chips: chips + winnings
+    });
   },
   updateResult: function(dealerTotal, dealerBlackjack) {
     var dealerBust = dealerTotal > 21;

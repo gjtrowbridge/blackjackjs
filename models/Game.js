@@ -58,7 +58,7 @@ var Game = Backbone.Model.extend({
     //Clears the hand for each player
     this.eachPlayer(function(player) {
       player.clearHand();
-      player.clearBets();
+      player.resolveBetting();
       player.clearResults();
       player.set('betting', true)
     });
@@ -130,6 +130,7 @@ var Game = Backbone.Model.extend({
     var dealerBlackjack = dealer.hasBlackjack();
     this.eachPlayer(function(player) {
       player.updateResult(dealerTotal,dealerBlackjack);
+      player.resolveBetting();
     });
 
     //Saves the results of the game
