@@ -6,7 +6,7 @@ var GameView = Backbone.View.extend({
     'click button.newgame-btn': 'newGame'
   },
   initialize: function() {
-    this.$result = $('<p>',{className:'result'});
+    this.$result = $('<div>',{class:'results'});
     this.$el.append(this.$result);
 
     //Adds the player views
@@ -18,20 +18,21 @@ var GameView = Backbone.View.extend({
     //Adds the bottom part
     this.$el.append(this.template(this.model.toJSON()));
 
-    this.model.on('gameOver', this.render, this);
-    this.model.on('newGame', this.render, this);
+    // this.model.on('gameOver', this.render, this);
+    // this.model.on('newGame', this.render, this);
+    this.model.on('change:gameOver', this.render, this);
 
     //Renders the result
     this.render();
   },
   render: function() {
     var results = this.model.getResults();
-    var html = '<div class="results">';
+    var html = '';
     for (var i=0; i<results.length; i++) {
       html += '<p>' + results[i] + '</p>';
     }
-    html += '</div>'
     this.$result.html(html);
+    console.log('rendered');
   },
   newGame: function() {
     this.model.newGame();

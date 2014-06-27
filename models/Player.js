@@ -7,7 +7,8 @@ var Player = Backbone.Model.extend({
       chips: 100,
       bet: 5,
       betting: true,
-      result: ''
+      result: '',
+      resultKey: 'loss'
     });
     this.get('hand').on('change', function(){
       this.trigger('change', this);
@@ -78,7 +79,49 @@ var Player = Backbone.Model.extend({
       this.set({chips: chips+5});
     }
   },
-  calculateResult: function(dealer) {
+  updateResult: function(dealerTotal, dealerBlackjack) {
+    var dealerBust = dealerTotal > 21;
+    if (!this.get('dealer')) {
 
+      var playerTotal = this.getTotal();
+      var playerBlackjack = this.hasBlackjack();
+      var playerBust = this.isBust();
+      var playerName = this.get('firstName');
+      
+      var playerResult = '';
+      var playerResultKey = '';
+
+      if (playerBust) {
+        playerResult = playerName + ' is bust, and loses.';
+        playerResultKey = 'loss';
+      } else if (playerBlackjack) {
+        if (dealerBlackjack) {
+          playerResult = 'Both dealer and ' + playerName + ' have blackjack. Draw.';
+          playerResultKey = 'tie';
+        } else {
+          playerResult = playerName + ' has blackjack! Winner!';
+          playerResultKey = 'blackjack';
+        }
+      } else if (dealerBlackjack) {
+        playerResult = 'Dealer has a blackjack. ' + playerName + ' loses.';
+        playerResultKey = 'loss';
+      } else if (dealerBust) {
+        playerResult = 'Dealer is bust. ' + playerName + ' wins.'
+        playerResultKey = 'win';
+      } else if (dealerTotal > playerTotal) {
+        playerResult = 'Dealer wins with a score of ' + dealerTotal + '. ' + playerName + ' loses.';
+        playerResultKey = 'loss';
+      } else if (dealerTotal === playerTotal) {
+        playerResult = 'Both dealer and ' + playerName + ' have a score of ' + dealerTotal + '. Draw.';
+        playerResultKey = 'tie';
+      } else {
+        playerResult = playerName + ' wins with a score of ' + playerTotal + '.';
+        playerResultKey = 'win';
+      }
+      this.set({
+        result: playerResult,
+        resultKey: playerResultKey
+      });
+    }
   }
 });

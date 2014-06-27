@@ -61,9 +61,6 @@ var Game = Backbone.Model.extend({
       player.set('betting', true)
     });
 
-    this.set({
-      gameOver: false,
-    });
 
     //Resets the deck with all new cards
     this.get('deck').reset();
@@ -71,7 +68,11 @@ var Game = Backbone.Model.extend({
     //Deals initial hands
     this.dealHands();
 
-    this.trigger('newGame');
+    // this.trigger('newGame');
+    
+    this.set({
+      gameOver: false,
+    });
   },
   startGame: function() {
     //unhide hands
@@ -117,53 +118,32 @@ var Game = Backbone.Model.extend({
       this.dealCard(dealer);
     }
 
+    //Calculates the result for each player
+    var dealerTotal = dealer.getTotal();
+    var dealerBlackjack = dealer.hasBlackjack();
+    this.eachPlayer(function(player) {
+      player.updateResult(dealerTotal,dealerBlackjack);
+    });
+
     //Saves the results of the game
     this.set({
       gameOver: true,
     });
-
-    this.trigger('gameOver');
   },
   getResults: function() {
     if (this.get('gameOver')) {
-      var dealer = this.get('players')[0];
-      var dealerTotal = dealer.getTotal();
-      var dealerBlackjack = dealer.hasBlackjack();
-      var dealerBust = dealer.isBust();
 
       var results = [];
       this.eachPlayer(function(player) {
-        
         if (!player.get('dealer')) {
-          var playerResult = '';
-          var playerName = player.get('firstName');
-          
-          var playerTotal = player.getTotal();
-          var playerBlackjack = player.hasBlackjack();
-          var playerBust = player.isBust();
-
-          if (playerBust) {
-            playerResult = playerName + ' is bust, and loses.';
-          } else if (playerBlackjack) {
-            if (dealerBlackjack) {
-              playerResult = 'Both dealer and ' + playerName + ' have blackjack. Draw.';
-            } else {
-              playerResult = playerName + ' has blackjack! Winner!';
-            }
-          } else if (dealerBlackjack) {
-            playerResult = 'Dealer has a blackjack. ' + playerName + ' loses.';
-          } else if (dealerBust) {
-            playerResult = 'Dealer is bust. ' + playerName + ' wins.'
-          } else if (dealerTotal > playerTotal) {
-            playerResult = 'Dealer wins with a score of ' + dealerTotal + '. ' + playerName + ' loses.';
-          } else if (dealerTotal === playerTotal) {
-            playerResult = 'Both dealer and ' + playerName + ' have a score of ' + dealerTotal + '. Draw.';
-          } else {
-            playerResult = playerName + ' wins with a score of ' + playerTotal + '.';
-          }
-          results.push(playerResult);
+          console.log('result: ' + player.get('result'));
+          results.push(player.get('result'));
         }
+        console.log(results);
+        console.log(player.get('dealer'));
+        console.log(player.get('firstName'));
       });
+      console.log(results);
       return results;
     } else {
       return [];
