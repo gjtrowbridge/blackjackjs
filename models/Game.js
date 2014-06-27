@@ -54,13 +54,18 @@ var Game = Backbone.Model.extend({
   //clears all players' hands,
   //then deals the initial hands
   newGame: function() {
+    
     //Clears the hand for each player
     this.eachPlayer(function(player) {
       player.clearHand();
       player.clearBets();
+      player.clearResults();
       player.set('betting', true)
     });
-
+    
+    this.set({
+      gameOver: false,
+    });
 
     //Resets the deck with all new cards
     this.get('deck').reset();
@@ -68,11 +73,13 @@ var Game = Backbone.Model.extend({
     //Deals initial hands
     this.dealHands();
 
+    this.eachPlayer(function(player) {
+      console.log(player.get('firstName'));
+      player.hand().inspect();
+    });
+
     // this.trigger('newGame');
     
-    this.set({
-      gameOver: false,
-    });
   },
   startGame: function() {
     //unhide hands
@@ -104,7 +111,7 @@ var Game = Backbone.Model.extend({
       var card = this.get('deck').popRandomCard();
       card.set({hidden:hidden});
 
-      player.get('hand').add(card);
+      player.hand().add(card);
     }
   },
   //Deals cards to the dealer and stores the game result
@@ -136,14 +143,9 @@ var Game = Backbone.Model.extend({
       var results = [];
       this.eachPlayer(function(player) {
         if (!player.get('dealer')) {
-          console.log('result: ' + player.get('result'));
           results.push(player.get('result'));
         }
-        console.log(results);
-        console.log(player.get('dealer'));
-        console.log(player.get('firstName'));
       });
-      console.log(results);
       return results;
     } else {
       return [];

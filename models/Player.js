@@ -26,6 +26,12 @@ var Player = Backbone.Model.extend({
   clearHand: function() {
     this.get('hand').discard();
   },
+  clearResults: function() {
+    this.set({
+      result: '',
+      resultKey: 'loss'
+    });
+  },
   unhideHand: function(overrideDealerHide) {
     var hand = this.hand();
     for (var i=0; i<hand.length; i++) {

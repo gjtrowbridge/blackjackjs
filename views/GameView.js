@@ -32,7 +32,6 @@ var GameView = Backbone.View.extend({
       html += '<p>' + results[i] + '</p>';
     }
     this.$result.html(html);
-    console.log('rendered');
   },
   newGame: function() {
     this.model.newGame();
