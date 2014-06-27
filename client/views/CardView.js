@@ -16,9 +16,9 @@ var CardView = Backbone.View.extend({
   },
   getSource: function() {
     if (this.model.isHidden()) {
-      return 'cards/playing-card-back.jpg';
+      return 'client/cards/playing-card-back.jpg';
     } else {
-      return 'cards/' + this.model.get('val').toString() + '_' + this.model.get('suit').toLowerCase() + '.png';
+      return 'client/cards/' + this.model.get('val').toString() + '_' + this.model.get('suit').toLowerCase() + '.png';
     }
   }
 });
