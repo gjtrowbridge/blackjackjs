@@ -24,5 +24,7 @@
   "devDependencies": {
     "bower": "^1.3.5",
     "grunt": "^0.4.5"
+  },
+  "dependencies": {
   }
 }
