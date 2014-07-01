@@ -72,13 +72,6 @@ var Game = Backbone.Model.extend({
 
     //Deals initial hands
     this.dealHands();
-
-    this.eachPlayer(function(player) {
-      console.log(player.get('firstName'));
-      player.hand().inspect();
-    });
-
-    // this.trigger('newGame');
     
   },
   startGame: function() {

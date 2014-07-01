@@ -16,7 +16,7 @@ var CardView = Backbone.View.extend({
   },
   getSource: function() {
     if (this.model.isHidden()) {
-      return 'client/cards/playing-card-back.jpg';
+      return 'client/cards/playing-card-back.png';
     } else {
       return 'client/cards/' + this.model.get('val').toString() + '_' + this.model.get('suit').toLowerCase() + '.png';
     }

@@ -69,7 +69,6 @@ var PlayerView = Backbone.View.extend({
   },
   playerIncreasesBet: function() {
     this.model.increaseBet();
-    console.log(this.model.get('bet'));
     this.render();
   },
   playerDecreasesBet: function() {
