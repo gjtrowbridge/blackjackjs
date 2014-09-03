@@ -1,0 +1,24 @@
+{
+  "name": "blackjack",
+  "main": "blackjack.html",
+  "version": "0.0.0",
+  "homepage": "https://github.com/gjtrowbridge/blackjackjs",
+  "authors": [
+    "Greg Trowbridge <gjtrowbridge@gmail.com>"
+  ],
+  "description": "Browser-based blackjack, written in Javascript",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "underscore": "~1.6.0",
+    "backbone": "~1.1.2",
+    "jquery": "~2.1.1",
+    "bootstrap": "~3.1.1"
+  }
+}
